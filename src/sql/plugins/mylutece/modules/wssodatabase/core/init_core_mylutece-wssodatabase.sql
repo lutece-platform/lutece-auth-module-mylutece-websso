@@ -1,3 +1,6 @@
+-- liquibase formatted sql
+-- changeset mylutece-websso:init_core_mylutece-wssodatabase.sql
+-- preconditions onFail:MARK_RAN onError:WARN
 --
 -- Dumping data for table core_admin_right
 --

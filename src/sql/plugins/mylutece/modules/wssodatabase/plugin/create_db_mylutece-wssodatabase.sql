@@ -1,3 +1,6 @@
+-- liquibase formatted sql
+-- changeset mylutece-websso:create_db_mylutece-wssodatabase.sql
+-- preconditions onFail:MARK_RAN onError:WARN
 --
 -- Table struture for mylutece_wsso_user
 --
