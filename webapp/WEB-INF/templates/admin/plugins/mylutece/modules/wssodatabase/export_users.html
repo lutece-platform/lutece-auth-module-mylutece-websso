@@ -1,63 +1,40 @@
 <div class="row-fluid">
-	<form class="form-horizontal" method="post" name="import_users_from_file" action="jsp/admin/plugins/mylutece/modules/wssodatabase/DoExportUsers.jsp">
-		<fieldset>
-		    <legend>#i18n{module.mylutece.wssodatabase.export_users.pageTitle}</legend> 
-		    &nbsp;
-			<ul class="nav nav-tabs">
-				<li class="active">
-					<a href="jsp/admin/plugins/mylutece/modules/wssodatabase/ExportUsers.jsp">#i18n{module.mylutece.wssodatabase.export_users.labelExportUsers}</a>
-				</li>
-				<li>
-					<a href="jsp/admin/plugins/mylutece/modules/wssodatabase/ImportUsersFromFile.jsp" >#i18n{module.mylutece.wssodatabase.import_users_from_file.labelImportUsers}</a>
-				</li>
-			</ul>
-			<div class="control-group">
-				<label class="control-label" for="xsl_export_id">#i18n{module.mylutece.wssodatabase.export_users.labelXslt} :</label>
-				<div class="controls">
-					<select id="xsl_export_id" name="xsl_export_id">
-						<#list refListXsl as xsl>
-							<option value="${xsl.code}" >${xsl.name}</option>
-						</#list>
-					</select>
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label" for="export_roles">#i18n{module.mylutece.wssodatabase.export_users.labelExportRoles} :</label>
-				<div class="controls">
-					<input type="checkbox" id="export_roles" name="export_roles" checked="checked"/>
-					<span class="help-block">#i18n{module.mylutece.wssodatabase.export_users.labelHelpExportRoles}</span>
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label" for="export_profils">#i18n{module.mylutece.wssodatabase.export_users.labelExportProfils} :</label>
-				<div class="controls">
-					<input type="checkbox" id="export_profils" name="export_profils" checked="checked"/>
-					<span class="help-block">#i18n{module.mylutece.wssodatabase.export_users.labelHelpExportProfils}</span>
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label" for="export_groups">#i18n{module.mylutece.wssodatabase.export_users.labelExportGroups} :</label>
-				<div class="controls">
-					<input type="checkbox" id="export_groups" name="export_groups" checked="checked"/>
-					<span class="help-block">#i18n{module.mylutece.wssodatabase.export_users.labelHelpExportGroups}</span>
-				</div>
-			</div>
-			<div class="form-actions">
-				<button class="btn btn-primary btn-small" type="submit">
-					<i class="icon-white icon-ok">&nbsp;</i>
-					#i18n{portal.util.labelValidate}
-				</button>
-				<a class="btn btn-small" href="jsp/admin/plugins/mylutece/modules/wssodatabase/ManageUsers.jsp">
-					<i class="icon-remove-circle"></i>
-					 #i18n{portal.util.labelBack}
-				</a>
-			</div>
-		</fieldset>
-	</form>
+    <form class="form-horizontal" method="post" name="import_users_from_file" action="jsp/admin/plugins/mylutece/modules/wssodatabase/DoExportUsers.jsp">
+        <fieldset>
+            <legend>#i18n{module.mylutece.wssodatabase.export_users.pageTitle}</legend>
+            &nbsp;
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="jsp/admin/plugins/mylutece/modules/wssodatabase/ExportUsers.jsp">#i18n{module.mylutece.wssodatabase.export_users.labelExportUsers}</a>
+                </li>
+                <li>
+                    <a href="jsp/admin/plugins/mylutece/modules/wssodatabase/ImportUsersFromFile.jsp" >#i18n{module.mylutece.wssodatabase.import_users_from_file.labelImportUsers}</a>
+                </li>
+            </ul>
+            <div class="control-group">
+                <label class="control-label" for="export_roles">#i18n{module.mylutece.wssodatabase.export_users.labelExportRoles} :</label>
+                <div class="controls">
+                    <input type="checkbox" id="export_roles" name="export_roles" checked="checked"/>
+                    <span class="help-block">#i18n{module.mylutece.wssodatabase.export_users.labelHelpExportRoles}</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="export_profils">#i18n{module.mylutece.wssodatabase.export_users.labelExportProfils} :</label>
+                <div class="controls">
+                    <input type="checkbox" id="export_profils" name="export_profils" checked="checked"/>
+                    <span class="help-block">#i18n{module.mylutece.wssodatabase.export_users.labelHelpExportProfils}</span>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary btn-small" type="submit">
+                    <i class="icon-white icon-ok">&nbsp;</i>
+                    #i18n{portal.util.labelValidate}
+                </button>
+                <a class="btn btn-small" href="jsp/admin/plugins/mylutece/modules/wssodatabase/ManageUsers.jsp">
+                    <i class="icon-remove-circle"></i>
+                    #i18n{portal.util.labelBack}
+                </a>
+            </div>
+        </fieldset>
+    </form>
 </div>
-
-
-	    
-	    
-	    
-	

@@ -41,6 +41,7 @@ import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.busi
 import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.business.WssoUser;
 import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.business.WssoUserHome;
 import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.business.WssoUserRoleHome;
+import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.business.WssoUserWrapper;
 import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.service.ImportWssoDatabaseUserService;
 import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.service.WssoDatabaseService;
 import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.util.LdapBrowser;
@@ -49,8 +50,6 @@ import fr.paris.lutece.plugins.mylutece.service.RoleResourceIdService;
 import fr.paris.lutece.portal.business.role.Role;
 import fr.paris.lutece.portal.business.role.RoleHome;
 import fr.paris.lutece.portal.business.user.AdminUser;
-import fr.paris.lutece.portal.business.xsl.XslExport;
-import fr.paris.lutece.portal.business.xsl.XslExportHome;
 import fr.paris.lutece.portal.service.admin.AdminUserService;
 import fr.paris.lutece.portal.service.csv.CSVMessageDescriptor;
 import fr.paris.lutece.portal.service.fileupload.FileUploadService;
@@ -65,7 +64,6 @@ import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPathService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
-import fr.paris.lutece.portal.service.xsl.XslExportService;
 import fr.paris.lutece.portal.web.admin.PluginAdminPageJspBean;
 import fr.paris.lutece.portal.web.constants.Messages;
 import fr.paris.lutece.portal.web.constants.Parameters;
@@ -79,9 +77,7 @@ import fr.paris.lutece.util.html.HtmlTemplate;
 import fr.paris.lutece.util.html.ItemNavigator;
 import fr.paris.lutece.util.html.Paginator;
 import fr.paris.lutece.util.sort.AttributeComparator;
-import fr.paris.lutece.util.string.StringUtil;
 import fr.paris.lutece.util.url.UrlItem;
-import fr.paris.lutece.util.xml.XmlUtil;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -133,7 +129,7 @@ public class WssodatabaseJspBean extends PluginAdminPageJspBean
     private static final String CONSTANT_QUOTE = "\"";
     private static final String CONSTANT_ATTACHEMENT_FILE_NAME = "attachement; filename=\"";
     private static final String CONSTANT_ATTACHEMENT_DISPOSITION = "Content-Disposition";
-    private static final String CONSTANT_XML_USERS = "users";
+    private static final String MARK_EXPORT_USERS = "users";
 
     //JSP
     private static final String MANAGE_USERS = "ManageUsers.jsp";
@@ -244,9 +240,9 @@ public class WssodatabaseJspBean extends PluginAdminPageJspBean
     private static final String TEMPLATE_IMPORT_USERS_FROM_FILE = "admin/plugins/mylutece/modules/wssodatabase/import_users_from_file.html";
     private static final String TEMPLATE_MANAGE_PROFILS_USER = "admin/plugins/mylutece/modules/wssodatabase/manage_profils_user.html";
     private static final String TEMPLATE_MAIL_USER_IMPORTED = "admin/plugins/mylutece/modules/wssodatabase/mail_user_imported.html";
+    public static final String TEMPLATE_EXPORT_USERS = "admin/plugins/mylutece/modules/wssodatabase/export/export_csv.ftl";
 
     private static final String FIELD_IMPORT_USERS_FILE = "module.mylutece.wssodatabase.import_users_from_file.labelImportFile";
-    private static final String FIELD_XSL_EXPORT = "module.mylutece.wssodatabase.export_users.labelXslt";
     private static final String CONSTANT_WILDCARD = "*";
 
     //    private Plugin _plugin;
@@ -1337,12 +1333,7 @@ public class WssodatabaseJspBean extends PluginAdminPageJspBean
 
         Map<String, Object> model = new HashMap<String, Object>( );
 
-        ReferenceList refListXsl = XslExportHome.getRefListByPlugin( getPlugin( ) );
-
-        model.put( MARK_LIST_XSL_EXPORT, refListXsl );
-
-        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_EXPORT_USERS_FROM_FILE,
-                AdminUserService.getLocale( request ), model );
+        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_EXPORT_USERS_FROM_FILE, AdminUserService.getLocale( request ), model );
 
         return getAdminPage( template.getHtml( ) );
     }
@@ -1360,67 +1351,33 @@ public class WssodatabaseJspBean extends PluginAdminPageJspBean
     {
         Plugin plugin = getPlugin( );
 
-        DefaultPluginActionResult result = new DefaultPluginActionResult( );
-
-        String strXslExportId = request.getParameter( PARAMETER_XSL_EXPORT_ID );
         String strExportProfils = request.getParameter( PARAMETER_EXPORT_PROFILS );
         String strExportRoles = request.getParameter( PARAMETER_EXPORT_ROLES );
         String strExportGroups = request.getParameter( PARAMETER_EXPORT_GROUPS );
         boolean bExportProfils = StringUtils.isNotEmpty( strExportProfils );
         boolean bExportRoles = StringUtils.isNotEmpty( strExportRoles );
-        boolean bExportGroups = StringUtils.isNotEmpty( strExportGroups );
-
-        if ( StringUtils.isBlank( strXslExportId ) )
-        {
-            Object[] tabRequiredFields = { I18nService.getLocalizedString( FIELD_XSL_EXPORT, getLocale( ) ) };
-            result.setRedirect( AdminMessageService.getMessageUrl( request, MESSAGE_MANDATORY_FIELD, tabRequiredFields,
-                    AdminMessage.TYPE_STOP ) );
-
-            return result;
-        }
-
-        int nIdXslExport = Integer.parseInt( strXslExportId );
-
-        XslExport xslExport = XslExportHome.findByPrimaryKey( nIdXslExport );
 
         Collection<WssoUser> listUsers = WssoUserHome.findWssoUsersList( plugin );
 
-        StringBuffer sbXml = new StringBuffer( XmlUtil.getXmlHeader( ) );
-        XmlUtil.beginElement( sbXml, CONSTANT_XML_USERS );
-
-        List<IAttribute> listAttributes = AttributeHome.findAll( getLocale( ),
-                PluginService.getPlugin( MyLutecePlugin.PLUGIN_NAME ) );
+        List<WssoUserWrapper> listUserExport = new ArrayList<>( );
 
         for ( WssoUser user : listUsers )
         {
-            sbXml.append( _databaseService.getXmlFromUser( user, bExportRoles, bExportGroups, bExportProfils,
-                    listAttributes, getLocale( ) ) );
+            listUserExport.add( _databaseService.getExportUser( user, bExportRoles, bExportProfils ) );
         }
 
-        XmlUtil.endElement( sbXml, CONSTANT_XML_USERS );
+        Map<String, Object> model = new HashMap<>( );
+        model.put( MARK_EXPORT_USERS, listUserExport );
 
-        String strXml = StringUtil.replaceAccent( sbXml.toString( ) );
-        String strExportedUsers = XslExportService.exportXMLWithXSL( nIdXslExport, strXml );
+        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_EXPORT_USERS, getLocale( ), model );
+        String strExportedUsers = template.getHtml( );
 
-        if ( CONSTANT_MIME_TYPE_CSV.contains( xslExport.getExtension( ) ) )
-        {
-            response.setContentType( CONSTANT_MIME_TYPE_CSV );
-        }
-        else if ( CONSTANT_EXTENSION_XML_FILE.contains( xslExport.getExtension( ) ) )
-        {
-            response.setContentType( CONSTANT_MIME_TYPE_XML );
-        }
-        else
-        {
-            response.setContentType( CONSTANT_MIME_TYPE_OCTETSTREAM );
-        }
-
-        String strFileName = CONSTANT_EXPORT_USERS_FILE_NAME + CONSTANT_POINT + xslExport.getExtension( );
-        response.setHeader( CONSTANT_ATTACHEMENT_DISPOSITION, CONSTANT_ATTACHEMENT_FILE_NAME + strFileName
-                + CONSTANT_QUOTE );
+        response.setContentType( CONSTANT_MIME_TYPE_CSV );
+        String strFileName = CONSTANT_EXPORT_USERS_FILE_NAME + CONSTANT_EXTENSION_CSV_FILE;
+        response.setHeader( CONSTANT_ATTACHEMENT_DISPOSITION, CONSTANT_ATTACHEMENT_FILE_NAME + strFileName + CONSTANT_QUOTE );
 
         PrintWriter out = response.getWriter( );
-        out.write( strExportedUsers );
+        out.write( StringUtils.trim( strExportedUsers ) );
         out.flush( );
         out.close( );
 

@@ -34,24 +34,20 @@
 package fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.service;
 
 import fr.paris.lutece.plugins.mylutece.authentication.MultiLuteceAuthentication;
-import fr.paris.lutece.plugins.mylutece.business.attribute.IAttribute;
 import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.IdxWSSODatabaseAuthentication;
 import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.business.WssoProfilHome;
 import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.business.WssoUser;
 import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.business.WssoUserRoleHome;
+import fr.paris.lutece.plugins.mylutece.modules.wssodatabase.authentication.business.WssoUserWrapper;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
-import fr.paris.lutece.util.xml.XmlUtil;
 
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 
 
 /**
@@ -62,19 +58,6 @@ import org.apache.commons.lang3.StringUtils;
 public class WssoDatabaseService
 {
     private static final String AUTHENTICATION_BEAN_NAME = "mylutece-wssodatabase.authentication";
-
-    private static final String CONSTANT_XML_USER = "user";
-    private static final String CONSTANT_XML_GUID = "guid";
-    private static final String CONSTANT_XML_LAST_NAME = "last_name";
-    private static final String CONSTANT_XML_FIRST_NAME = "first_name";
-    private static final String CONSTANT_XML_EMAIL = "email";
-    private static final String CONSTANT_XML_DATE = "date";
-
-    private static final String CONSTANT_XML_ROLES = "roles";
-    private static final String CONSTANT_XML_ROLE = "role";
-
-    private static final String CONSTANT_XML_PROFILS = "profils";
-    private static final String CONSTANT_XML_PROFIL = "profil";
 
     private static WssoDatabaseService _singleton = new WssoDatabaseService( );
 
@@ -111,74 +94,31 @@ public class WssoDatabaseService
     }
 
     /**
-     * Get a XML string describing a given user
-     * @param user The user to get the XML of.
-     * @param bExportRoles True to export roles of the user, false otherwise.
-     * @param bExportGroups True to export groups of the user, false otherwise.
-     * @param bExportProfils True to export profils of the user, false
-     *            otherwise.
-     * @param listAttributes The list of attributes to export.
-     * @param locale The locale
-     * @return A string of XML with the information of the user.
+     * Get a WssoUserWrapper describing a given user for export
      */
-    public String getXmlFromUser( WssoUser user, boolean bExportRoles, boolean bExportGroups, boolean bExportProfils,
-            List<IAttribute> listAttributes, Locale locale )
+    public WssoUserWrapper getExportUser( WssoUser user, boolean bExportRoles, boolean bExportProfils )
     {
         Plugin databasePlugin = PluginService.getPlugin( WssoDatabasePlugin.PLUGIN_NAME );
+        WssoUserWrapper wssoUserExport = new WssoUserWrapper( user );
 
-        StringBuffer sbXml = new StringBuffer( );
-        XmlUtil.beginElement( sbXml, CONSTANT_XML_USER );
-        XmlUtil.addElement( sbXml, CONSTANT_XML_GUID, user.getGuid( ) );
-        XmlUtil.addElement( sbXml, CONSTANT_XML_LAST_NAME, user.getLastName( ) );
-        XmlUtil.addElement( sbXml, CONSTANT_XML_FIRST_NAME, user.getFirstName( ) );
-        XmlUtil.addElement( sbXml, CONSTANT_XML_EMAIL, user.getEmail( ) );
-        if ( user.getDateLastLogin( ) != null )
-        {
-            SimpleDateFormat dateFormat = new SimpleDateFormat( "dd/MM/yyyy" );
-            XmlUtil.addElement( sbXml, CONSTANT_XML_DATE, dateFormat.format( user.getDateLastLogin( ) ) );
-        }
-        else
-        {
-            XmlUtil.addElement( sbXml, CONSTANT_XML_DATE, StringUtils.EMPTY );
-        }
         if ( bExportRoles )
         {
-            Collection<String> userRoleList = WssoUserRoleHome.findRolesListForUser( user.getMyluteceWssoUserId( ),
-                    databasePlugin );
-
+            Collection<String> userRoleList = WssoUserRoleHome.findRolesListForUser( user.getMyluteceWssoUserId( ), databasePlugin );
             if ( CollectionUtils.isNotEmpty( userRoleList ) )
             {
-                XmlUtil.beginElement( sbXml, CONSTANT_XML_ROLES );
-
-                for ( String strRole : userRoleList )
-                {
-                    XmlUtil.addElement( sbXml, CONSTANT_XML_ROLE, strRole );
-                }
-
-                XmlUtil.endElement( sbXml, CONSTANT_XML_ROLES );
+                wssoUserExport.setRoles( new ArrayList<>( userRoleList ) );
             }
         }
 
         if ( bExportProfils )
         {
-            Collection<String> userProfilList = WssoProfilHome.findWssoProfilsForUser( user.getMyluteceWssoUserId( ),
-                    databasePlugin );
-
+            Collection<String> userProfilList = WssoProfilHome.findWssoProfilsForUser( user.getMyluteceWssoUserId( ), databasePlugin );
             if ( CollectionUtils.isNotEmpty( userProfilList ) )
             {
-                XmlUtil.beginElement( sbXml, CONSTANT_XML_PROFILS );
-
-                for ( String strProfil : userProfilList )
-                {
-                    XmlUtil.addElement( sbXml, CONSTANT_XML_PROFIL, strProfil );
-                }
-
-                XmlUtil.endElement( sbXml, CONSTANT_XML_PROFILS );
+                wssoUserExport.setProfils( new ArrayList<>( userProfilList ) );
             }
         }
 
-        XmlUtil.endElement( sbXml, CONSTANT_XML_USER );
-
-        return sbXml.toString( );
+        return wssoUserExport;
     }
 }
